@@ -21,6 +21,7 @@ add_library(libkernel SHARED EXCLUDE_FROM_ALL
         ${CMAKE_CURRENT_SOURCE_DIR}/File/src/Stdio.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/../libc/src/Rename.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Semaphore/src/Semaphore.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Semaphore/src/Ksem.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/SyncOnAddress/src/SyncOnAddress.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/DirectMemory/Export.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/DirectMemory/DirectMemory.cpp
@@ -186,6 +187,18 @@ if(BUILD_TESTING)
         set_tests_properties(guest_posix_sem_init guest_posix_sem_post PROPERTIES ENVIRONMENT_MODIFICATION
             "PATH=path_list_prepend:$<TARGET_FILE_DIR:libkernel>")
     endif()
+    add_test_executable(guest_ksem_tests ${LIBS_INCLUDE_DIR}/tests/GuestKsem.cpp)
+    target_include_directories(guest_ksem_tests PRIVATE ${LIBS_INCLUDE_DIR})
+    target_link_libraries(guest_ksem_tests PRIVATE libkernel libc)
+    configure_windows_unwind(guest_ksem_tests)
+    foreach(testCase IN ITEMS anonymous wait named limit)
+        add_test(NAME guest_ksem_${testCase} COMMAND guest_ksem_tests ${testCase})
+        set_tests_properties(guest_ksem_${testCase} PROPERTIES TIMEOUT 20)
+        if(WIN32)
+            set_tests_properties(guest_ksem_${testCase} PROPERTIES ENVIRONMENT_MODIFICATION
+                "PATH=path_list_prepend:$<TARGET_FILE_DIR:libkernel>")
+        endif()
+    endforeach()
     add_test_executable(guest_process_time_tests ${LIBS_INCLUDE_DIR}/tests/GuestProcessTime.cpp)
     target_include_directories(guest_process_time_tests PRIVATE ${LIBS_INCLUDE_DIR})
     target_link_libraries(guest_process_time_tests PRIVATE libkernel libc)

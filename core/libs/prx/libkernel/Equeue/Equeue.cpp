@@ -766,6 +766,7 @@ KernelEqueueEvent EqueueDescriptorEvent(int descriptor, int16_t filter, uint16_t
 
 void EqueueDescriptorClosed(int descriptor) {
     KqueueDescriptorClosed(descriptor);
+    KsemDescriptorClosed(descriptor);
     std::vector<KernelEqueueRef> owners;
     {
         std::unique_lock lock(g_equeueMutex);
